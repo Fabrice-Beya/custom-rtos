@@ -1,39 +1,79 @@
 /*
- * os_kernel.h
+ * @File: os_kernel.h
+ * @Brief:
+ * A basic real time operating system kernel for the cortex-m4
  *
- *  Created on: 20 Aug 2022
- *      Author: fabricebeya
+ * @Author: Fabrice Beya
+ * @Created: 20 Aug 2022
+ * @Last updated:  21 Aug 2022
+ *
  */
 
 #ifndef OS_KERNEL_H_
 #define OS_KERNEL_H_
 
-#include "stm32f3xx.h"
-#include <stdint.h>
+#include "utils.h"
 
-#define NUM_OF_THREADS 			3
-#define STACKSIZE 				400
-#define BUS_FREQ				8000000
+// Maximum number of supported threads
+#define NUM_OF_THREADS										10
 
-#define STR_EN			(1U)
-#define STR_INT			(1U << 1)
-#define STR_CLK_SRC		(1U << 2)
-#define STR_FLAG		(1U << 16)
+// Total OS stack size
+#define STACKSIZE 											400
 
-#define ONE_SEC_LOAD	8000000
+// Default processor bus frequency
+// Default stm32f3 is 8Mhz
+#define BUS_FREQ											8000000
 
-#define MAX_DELAY       0xFFFFFFFF
+// Program Status Register T-Bit
+// Used to configure the arm processor to use THUMB
+// instruction set.
+#define PSR_TBIT											bit24
 
-#define SYSTICK_RST     0
+// Enable SysTick clock
+#define SYSTICK_CTRL_EN										bit0
 
-#define INT_CTRL		(*(volatile uint32_t *)0xE000ED04)
-#define PENDSTSET		(1U << 26)
+// Enable SysTick Interrupt
+#define SYSTICK_CTRL_INT									bit1
+
+// Set the SysTick clock to use the internal clock
+#define SYSTICK_CTRL_CLK									bit2
+
+// SysTick timer flag i.e counter = 0
+#define SYSTICK_CTRL_FLAG									bit16
+
+// Pre-scaler used to set SysTick counter to 1 second
+#define ONE_SEC_LOAD										8000000
+
+// Maximum delay size = maximum 32 bit value
+#define MAX_DELAY       									0xFFFFFFFF
+
+// Value set when resting SysTick counter value
+#define SYSTICK_CTRL_RST    	 							0
+
+// Memory address of SysTick interrupt
+#define INT_CTRL											(*(volatile uint32_t *)0xE000ED04)
+
+// Used to programmatically trigger a SysTick interrupt
+#define PENDSTSET											bit26
+
+// Thread Control Block type definition
+// Linked list node used manage collection of os threads
+struct thread_control_block {
+	// Pointer to first address of thread stack
+	int32_t *stackPts;
+	// Pointer to the first address of the next thread
+	struct tcb *nextPt;
+}typedef task_control_block_type;
 
 
-uint8_t os_kernel_add_threads(void(*task0)(void), void(*task1)(void), void(*task2)(void));
-void os_kernel_init(void);
-void os_kernel_launch(uint32_t quanta);
-void os_yeild_thread(void);
+task_control_block_type os_stack[NUM_OF_THREADS];
+task_control_block_type *p_current_thread;
+
+
+uint8_t Os_Kernel_Add_Threads(void(*task0)(void), void(*task1)(void), void(*task2)(void));
+void Os_Kernel_Init(void);
+void Os_Kernel_Launch(uint32_t quanta);
+void Os_Yeild_Thread(void);
 
 
 #endif /* OS_KERNEL_H_ */

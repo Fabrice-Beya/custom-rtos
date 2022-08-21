@@ -27,7 +27,7 @@ void task0(void)
 	while(1)
 	{
 		Task0_Profiler++;
-		os_yeild_thread();
+		Os_Yeild_Thread();
 	}
 }
 
@@ -54,11 +54,11 @@ int main(void)
 	// init uart
 	uart_init();
 	// Init kernel
-	os_kernel_init();
+	Os_Kernel_Init();
 	// Add threads
-	os_kernel_add_threads(&task0, &task1, &task2);
+	Os_Kernel_Add_Threads(&task0, &task1, &task2);
 	// Set time quanta to 10ms
-	os_kernel_launch(QUANTA);
+	Os_Kernel_Launch(QUANTA);
 
 }
 
