@@ -27,7 +27,6 @@ void task0(void)
 	while(1)
 	{
 		Task0_Profiler++;
-		Os_Yeild_Thread();
 	}
 }
 
@@ -36,7 +35,6 @@ void task1(void)
 	while(1)
 	{
 		Task1_Profiler++;
-		valve_open();
 	}
 }
 
@@ -56,7 +54,9 @@ int main(void)
 	// Init kernel
 	Os_Kernel_Init();
 	// Add threads
-	Os_Kernel_Add_Threads(&task0, &task1, &task2);
+	Os_Kernel_Add_Thread(&task0);
+	Os_Kernel_Add_Thread(&task1);
+	Os_Kernel_Add_Thread(&task2);
 	// Set time quanta to 10ms
 	Os_Kernel_Launch(QUANTA);
 

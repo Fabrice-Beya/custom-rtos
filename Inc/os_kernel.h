@@ -56,6 +56,16 @@
 // Used to programmatically trigger a SysTick interrupt
 #define PENDSTSET											bit26
 
+// Dummy value used when initialising thread registers
+#define THREAD_REG_INT_VAL									0xAAAAAAAA
+
+// Used to keep track of a threads state
+enum thread_state {
+	READY = 0,
+	BLOCKED,
+	RUNNING
+}typedef thread_state_type;
+
 // Thread Control Block type definition
 // Linked list node used manage collection of os threads
 struct thread_control_block {
@@ -63,14 +73,17 @@ struct thread_control_block {
 	int32_t *stackPts;
 	// Pointer to the first address of the next thread
 	struct tcb *nextPt;
+	// Index of the current thread
+	uint32_t index;
+	// Index of the current thread
+	char* name[100];
+	// Thread state
+	thread_state_type state;
+
 }typedef task_control_block_type;
 
 
-task_control_block_type os_stack[NUM_OF_THREADS];
-task_control_block_type *p_current_thread;
-
-
-uint8_t Os_Kernel_Add_Threads(void(*task0)(void), void(*task1)(void), void(*task2)(void));
+task_control_block_type * Os_Kernel_Add_Thread(void(*thread)(void));
 void Os_Kernel_Init(void);
 void Os_Kernel_Launch(uint32_t quanta);
 void Os_Yeild_Thread(void);
