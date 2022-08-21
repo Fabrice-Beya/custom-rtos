@@ -4,123 +4,205 @@
  *  Created on: 20 Aug 2022
  *      Author: fabricebeya
  */
+
 #include "os_kernel.h"
 
 void os_schedular_launch(void);
-void os_kernel_stack_init(int thread_index);
-// launch kernel setting time constant quanta
-uint32_t KERNEL_MILLIS_PRESCALER;
-struct tcb {
-	int32_t *stackPts;
-	struct tcb *nextPt;
-}typedef tcbType;
+void init_thread_stack(int32_t thread_address);
 
-tcbType tcbs[NUM_OF_THREADS];
-tcbType *currentPt;
+// Total number of created threads
+volatile uint32_t os_thread_count = 0;
 
- /*
-  * Each thread will have a stack size of 100 bytes.
-	We need 16 * 4(32 bits) = 64 bytes to hold the all the 16
-	processor registers. Only 8 are stored in the stack when
-	context switching. xPSR, PC, LR, r12, r3, r2, r1, r0
+// Holds the computed pre-scalar value used to convert the specified os Quanta in milliseconds
+volatile uint32_t KERNEL_MILLIS_PRESCALER;
 
-	Register order:
-	r16: PSR
-	r15: PC
-	r14: LR
-	r12:
-	r3:
-	r2:
-	r1:
-	r0:
-	r11:
-	r10:
-	r9:
-	r8:
-	r7:
-	r6:
-	r5:
-	r4:
+// Total os stack space
+int32_t os_stack[NUM_OF_THREADS][STACKSIZE];
 
-*/
-int32_t TCB_STACK[NUM_OF_THREADS][STACKSIZE];
+// Total list of all create threads
+task_control_block_type threads[NUM_OF_THREADS];
 
+// Pointer to the current thread being executed
+task_control_block_type *p_current_thread;
 
-/*
- * We skip the first 4 bytes this points to the stack pointer r13
- *
- * */
-
-void os_kernel_stack_init(int thread_index)
+/**
+  *@brief
+  *
+  *
+  *@param a parameter a
+  *@param b parameter b
+  *@return  return sum
+  *
+  */
+void Os_Kernel_Init(void)
 {
-
-	tcbs[thread_index].stackPts = &TCB_STACK[thread_index][STACKSIZE - 16]; // Program counter
-
-	// The first 4 bytes(32bits) in the stack hold the xPSR register
-	// bit 21 indicates which instruction sets to use either thumb or arms
-	// The cortex m4 uses thumb instruction set thus this bit needs to be set high
-	TCB_STACK[thread_index][STACKSIZE - 1] = (1U << 24); // PSR(program status) register bit 21(T-Bit) set high
-
-	// The program counter needs to hold the address of the thread function
-
-	// Stored during context switching aka stack frame
-	TCB_STACK[thread_index][STACKSIZE - 3]  	= 0xAAAAAAAA; // r14: LR(Link register)
-	TCB_STACK[thread_index][STACKSIZE - 4] 		= 0xAAAAAAAA; // r12:
-	TCB_STACK[thread_index][STACKSIZE - 5] 		= 0xAAAAAAAA; // r3:
-	TCB_STACK[thread_index][STACKSIZE - 6] 		= 0xAAAAAAAA; // r2:
-	TCB_STACK[thread_index][STACKSIZE - 7] 		= 0xAAAAAAAA; // r1:
-	TCB_STACK[thread_index][STACKSIZE - 8] 		= 0xAAAAAAAA; // r0:
-
-	// Not stored when context switching
-	TCB_STACK[thread_index][STACKSIZE - 9] 		= 0xAAAAAAAA; // r11:
-	TCB_STACK[thread_index][STACKSIZE - 10] 	= 0xAAAAAAAA; // r10:
-	TCB_STACK[thread_index][STACKSIZE - 11] 	= 0xAAAAAAAA; // r9:
-	TCB_STACK[thread_index][STACKSIZE - 12] 	= 0xAAAAAAAA; // r8:
-	TCB_STACK[thread_index][STACKSIZE - 13] 	= 0xAAAAAAAA; // r7:
-	TCB_STACK[thread_index][STACKSIZE - 14]	 	= 0xAAAAAAAA; // r6:
-	TCB_STACK[thread_index][STACKSIZE - 15] 	= 0xAAAAAAAA; // r5:
-	TCB_STACK[thread_index][STACKSIZE - 16] 	= 0xAAAAAAAA; // r4:
+	KERNEL_MILLIS_PRESCALER = (BUS_FREQ/1000);
+	os_thread_count = 0;
 }
 
-uint8_t os_kernel_add_threads(void(*task0)(void), void(*task1)(void), void(*task2)(void))
+/**
+  *@brief
+  * The thread stack is initialized from the bottom up, this is due to the processor exception frame.
+  * The exception frame stores registers from PSR to R0:
+  *	: 16
+  *
+  * holds the thread context which is stored by the processor when performing a context switch. Thus we initialize the
+  * thread stack from the bottom up i.e [STACKSIZE - {Register position}]
+  *
+  *@param void
+  *@return NA
+  *
+  */
+void init_thread_stack(int32_t thread_address)
+{
+	/**
+	 * xPRS Register
+	 * Set the T-Bit of the Program Status Register to 1.
+	 * @Brief:
+	 * 	The register in the stack holds the Program Status Register.
+	 * 	The T-Bit(bit 24) configures the processor to use the thumb instructions set
+	 */
+	os_stack[os_thread_count][STACKSIZE - 1] = PSR_TBIT;
+
+	/**
+	 * PC Register
+	 * Initialise the program counter register
+	 * @Brief:
+	 * 	The program counter register must be initialise to point the address of the
+	 * 	thread function. This is done in the
+	 */
+	os_stack[os_thread_count][STACKSIZE - 2] = thread_address;
+
+	/**
+	 * Link Register
+	 * Initialise the link register to dummy value THREAD_REG_INT_VAL
+	 * @Brief:
+	 * 	Register is stored as part of exception stack frame.
+	 */
+	os_stack[os_thread_count][STACKSIZE - 3] = THREAD_REG_INT_VAL;
+
+	/**
+	 * R12
+	 * Initialise the R12 to dummy value THREAD_REG_INT_VAL
+	 * @Brief:
+	 * 	Register is stored as part of exception stack frame.
+	 */
+	os_stack[os_thread_count][STACKSIZE - 4] = THREAD_REG_INT_VAL;
+
+	/**
+	 * R3
+	 * Initialise the R3 to dummy value THREAD_REG_INT_VAL
+	 * @Brief:
+	 * 	Register is stored as part of exception stack frame.
+	 */
+	os_stack[os_thread_count][STACKSIZE - 5] = THREAD_REG_INT_VAL;
+
+	/**
+	 * R2
+	 * Initialise the R2 to dummy value THREAD_REG_INT_VAL
+	 * @Brief:
+	 * 	Register is stored as part of exception stack frame.
+	 */
+	os_stack[os_thread_count][STACKSIZE - 6] = THREAD_REG_INT_VAL;
+
+	/**
+	 * R1
+	 * Initialise the R1 to dummy value THREAD_REG_INT_VAL
+	 * @Brief:
+	 * 	Register is stored as part of exception stack frame.
+	 */
+	os_stack[os_thread_count][STACKSIZE - 7] = THREAD_REG_INT_VAL;
+
+	/**
+	 * R0
+	 * Initialise the R0 to dummy value THREAD_REG_INT_VAL
+	 * @Brief:
+	 * 	Register is stored as part of exception stack frame.
+	 */
+	os_stack[os_thread_count][STACKSIZE - 8] = THREAD_REG_INT_VAL;
+
+	/**
+	 * R11 -> R4
+	 * Initialise R11->R4 to dummy value THREAD_REG_INT_VAL
+	 * @Brief:
+	 * 	These register values are not automatically stored, but we keep a record of them
+	 * 	in our thread stack frame.
+	 */
+	os_stack[os_thread_count][STACKSIZE - 9]  = THREAD_REG_INT_VAL; // R11
+	os_stack[os_thread_count][STACKSIZE - 10] = THREAD_REG_INT_VAL; // R10
+	os_stack[os_thread_count][STACKSIZE - 11] = THREAD_REG_INT_VAL; // R9
+	os_stack[os_thread_count][STACKSIZE - 12] = THREAD_REG_INT_VAL; // R8
+	os_stack[os_thread_count][STACKSIZE - 13] = THREAD_REG_INT_VAL; // R7
+	os_stack[os_thread_count][STACKSIZE - 14] = THREAD_REG_INT_VAL; // R6
+	os_stack[os_thread_count][STACKSIZE - 15] = THREAD_REG_INT_VAL; // R5
+	os_stack[os_thread_count][STACKSIZE - 16] = THREAD_REG_INT_VAL; // R4
+
+	/**
+	 * @Brief:
+	 * 	Set the new threads stack pointer to the address at the top of the thread stack
+	 */
+	threads[os_thread_count].stackPts = &os_stack[os_thread_count][STACKSIZE - 16];
+
+
+	/**
+	 * Note:
+	 * 	Register R13 is the Stack Pointer. This holds the address of the top
+	 * 	of the stack frame i.e when an exception occurs r13 = os_stack[thread_count][STACKSIZE - 1]
+	 */
+
+}
+
+/**
+  *@brief
+  *
+  *
+  *@param thread: A new thread function.
+  *@return: A pointer to stack frame of the new thread.
+  *
+  */
+task_control_block_type* Os_Kernel_Add_Thread(void(*thread)(void))
 {
 	// Disable global interrupts
 	__disable_irq();
 
-	// Connect
-	tcbs[0].nextPt = &tcbs[1];
-	tcbs[1].nextPt = &tcbs[2];
-	tcbs[2].nextPt = &tcbs[0];
+	// Initialise os stack space for the new task
+	init_thread_stack((int32_t)thread);
 
-	// Initialize stack for each task
-	// Set the PC to point the the address of each of the associated tasks
-	os_kernel_stack_init(0);
-	TCB_STACK[0][STACKSIZE - 2]  = (int32_t)(task0);
+	// Add the new thread to the scheduler priority queue
+	// TODO: Add this process in a separate function which will determine
+	// the scheduler algorithm
+	if (os_thread_count == 0){
+		threads[os_thread_count].nextPt = &threads[os_thread_count];
+	} else {
+		threads[os_thread_count - 1].nextPt = &threads[os_thread_count];
+		threads[os_thread_count].nextPt = &threads[0];
+	}
 
-	os_kernel_stack_init(1);
-	TCB_STACK[1][STACKSIZE - 2]  = (int32_t)(task1);
+	// Set current stack to the first thread
+	p_current_thread = &threads[0];
 
-	os_kernel_stack_init(2);
-	TCB_STACK[2][STACKSIZE - 2]  = (int32_t)(task2);
-
-	// Set current stack to task0
-	currentPt = &tcbs[0];
+	// Increase thread counter.
+	os_thread_count++;
 
 	// Enable global interrupts
 	__enable_irq();
 
-	return 1;
+	return &threads[os_thread_count];
 }
 
-void os_kernel_init(void)
-{
-	KERNEL_MILLIS_PRESCALER = (BUS_FREQ/1000);
-}
-
-void os_kernel_launch(uint32_t quanta)
+/**
+  *@brief
+  *
+  *
+  *@param quanta: The desired maximum thread period in milliseconds
+  *@param b parameter b
+  *@return  return sum
+  *
+  */
+void Os_Kernel_Launch(uint32_t quanta)
 {
 	// reset systick value
-	SysTick->CTRL = SYSTICK_RST;
+	SysTick->CTRL = SYSTICK_CTRL_RST;
 	// clear systick by writing any value
 	SysTick->VAL = 0;
 	// Load quanta size
@@ -129,16 +211,27 @@ void os_kernel_launch(uint32_t quanta)
 	// So that hardware interrupts wont be blocked by the systick interrupts
 	NVIC_SetPriority(SysTick_IRQn, 15);
 	// Select sytick clock to internal clock | Enable systick Interrupts || Enable systick
-	SysTick->CTRL |= STR_CLK_SRC | STR_INT | STR_EN;
+	SysTick->CTRL |= SYSTICK_CTRL_CLK | SYSTICK_CTRL_INT | SYSTICK_CTRL_EN;
 
 	// Launch scheduler
 	// os scheduler launch
 	os_schedular_launch();
 }
 
+
 // __atrribute__((naked)) prevents stack from being changed during the execution of the systick handler
 // GNU compiler documentation using GNU assembler asm syntax different on arm keil.
 // Save current thread and load the next thread.
+
+/**
+ * SysTick Exception Handler
+  *@brief
+  *	Called each time a SysTick interrupt has occurred. This is where we perform a context switch
+  *	i.e we stop the execution of the current thread and replace it with the next thread in our
+  *	scheduler priority queue.
+  *
+  *	__atrribute__((naked)) prevents stack from being changed during the execution of the systick handler
+  */
 __attribute__((naked))  void SysTick_Handler(void)
 {
 	// Run each quata
@@ -150,7 +243,7 @@ __attribute__((naked))  void SysTick_Handler(void)
 	// r4 - r11
 	__asm("PUSH	{R4-R11}");
 	// Load address of current pointer(thread) into r0
-	__asm("LDR R0, =currentPt");
+	__asm("LDR R0, =p_current_thread");
 	// load current point into r1
 	__asm("LDR R1,[R0]");
 	// store cortex m4 stack pointer at address r1 i.e store stack pointer into tcb stackPt
@@ -170,15 +263,21 @@ __attribute__((naked))  void SysTick_Handler(void)
 	__asm("CPSIE	I");
 
 	// return from sub-routine/exception and restore saved registers
-	// regsiters are automatically restored when we return.
+	// Registers are automatically restored when we return.
 	__asm("BX   LR");
 
 }
 
+/**
+ * Launch the os with the current thread
+  *@brief
+  *	This is the first task is loaded upon os launch.
+  *
+  */
 void os_schedular_launch(void)
 {
 	// load address of currentPt into R0
-	__asm("LDR R0,=currentPt");
+	__asm("LDR R0,=p_current_thread");
 	// Load r2 from address r2 with r0 ie r2 = currentPt
 	__asm("LDR R2,[R0]");
 	// Load r2 into cortex-m4 stack pointer ie making currentPt = cortex-m4 stack pointer
@@ -202,7 +301,16 @@ void os_schedular_launch(void)
 	__asm("BX    LR");
 }
 
-void os_yeild_thread(void)
+
+/**
+ * Yield control back to the os to run the next thread
+  *@brief
+  *	This allows a thread to end its execution and allow the next thread in the queue to run.
+  *	This is achieved by triggering a SysTick interrupt which will preempt the current thread
+  *	and move onto to running the next thread in the schedulers priority queue.
+  *
+  */
+void Os_Yeild_Thread(void)
 {
 	// clear systick value
 	SysTick->VAL = 0;
