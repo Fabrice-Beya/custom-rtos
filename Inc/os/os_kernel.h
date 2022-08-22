@@ -1,13 +1,12 @@
-/*
- * @File: os_kernel.h
- * @Brief:
- * A basic real time operating system kernel for the cortex-m4
- *
- * @Author: Fabrice Beya
- * @Created: 20 Aug 2022
- * @Last updated:  21 Aug 2022
- *
- */
+/**
+ ******************************************************************************
+ * @file           : os_kernel.h
+ * @author         : Fabrice Beya
+ * @brief          : OS header file
+ ******************************************************************************
+ ******************************************************************************
+*
+**/
 
 #ifndef OS_KERNEL_H_
 #define OS_KERNEL_H_
@@ -59,6 +58,9 @@
 // Dummy value used when initialising thread registers
 #define THREAD_REG_INT_VAL									0xAAAAAAAA
 
+// Maximum thread name size
+#define THREAD_NAME_SIZE									24
+
 // Used to keep track of a threads state
 enum thread_state {
 	READY = 0,
@@ -75,15 +77,17 @@ struct thread_control_block {
 	struct tcb *nextPt;
 	// Index of the current thread
 	uint32_t index;
-	// Index of the current thread
-	char* name[100];
 	// Thread state
 	thread_state_type state;
+	// Priority weighting of the thread. [0 - 10]
+	int priority;
+	// Index of the current thread
+	char *name;
 
-}typedef task_control_block_type;
+}typedef thread_handle_t;
 
 
-task_control_block_type * Os_Kernel_Add_Thread(void(*thread)(void));
+thread_handle_t* Os_Kernel_Create_Thread(char *name, int priority, void(*thread)(void));
 void Os_Kernel_Init(void);
 void Os_Kernel_Launch(uint32_t quanta);
 void Os_Yeild_Thread(void);

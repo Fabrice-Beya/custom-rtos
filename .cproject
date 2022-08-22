@@ -43,6 +43,9 @@
 									<listOptionValue builtIn="false" value="../Inc"/>
 									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/uart_driver/chip_headers/Device/ST/STM32F3xx/Include"/>
 									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/uart_driver/chip_headers/Include"/>
+									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/utils"/>
+									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/os"/>
+									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/drivers"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.225228722" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>

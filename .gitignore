@@ -37,6 +37,7 @@
 *.hex
 
 # Debug files
+*/Debug
 *.dSYM/
 *.su
 *.idb
@@ -51,3 +52,4 @@ Module.symvers
 Mkfile.old
 dkms.conf
 *.list
+Debug/makefile

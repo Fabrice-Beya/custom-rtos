@@ -1,9 +1,12 @@
-/*
- * os_kernel.c
- *
- *  Created on: 20 Aug 2022
- *      Author: fabricebeya
- */
+/**
+ ******************************************************************************
+ * @file           : os_kernel.c
+ * @author         : Fabrice Beya
+ * @brief          : Operating System kernel
+ ******************************************************************************
+ ******************************************************************************
+*
+**/
 
 #include "os_kernel.h"
 
@@ -20,10 +23,10 @@ volatile uint32_t KERNEL_MILLIS_PRESCALER;
 int32_t os_stack[NUM_OF_THREADS][STACKSIZE];
 
 // Total list of all create threads
-task_control_block_type threads[NUM_OF_THREADS];
+thread_handle_t threads[NUM_OF_THREADS];
 
 // Pointer to the current thread being executed
-task_control_block_type *p_current_thread;
+thread_handle_t *p_current_thread;
 
 /**
   *@brief
@@ -160,7 +163,7 @@ void init_thread_stack(int32_t thread_address)
   *@return: A pointer to stack frame of the new thread.
   *
   */
-task_control_block_type* Os_Kernel_Add_Thread(void(*thread)(void))
+thread_handle_t* Os_Kernel_Create_Thread(char *name, int priority, void(*thread)(void))
 {
 	// Disable global interrupts
 	__disable_irq();
@@ -168,18 +171,14 @@ task_control_block_type* Os_Kernel_Add_Thread(void(*thread)(void))
 	// Initialise os stack space for the new task
 	init_thread_stack((int32_t)thread);
 
-	// Add the new thread to the scheduler priority queue
-	// TODO: Add this process in a separate function which will determine
-	// the scheduler algorithm
-	if (os_thread_count == 0){
-		threads[os_thread_count].nextPt = &threads[os_thread_count];
-	} else {
-		threads[os_thread_count - 1].nextPt = &threads[os_thread_count];
-		threads[os_thread_count].nextPt = &threads[0];
-	}
+	//Initialise thread meta data
+	threads[os_thread_count].name = name;
+	threads[os_thread_count].index = os_thread_count;
+	threads[os_thread_count].state = READY;
+	threads[os_thread_count].priority = priority;
 
 	// Set current stack to the first thread
-	p_current_thread = &threads[0];
+//	p_current_thread = &threads[0];
 
 	// Increase thread counter.
 	os_thread_count++;
@@ -188,6 +187,31 @@ task_control_block_type* Os_Kernel_Add_Thread(void(*thread)(void))
 	__enable_irq();
 
 	return &threads[os_thread_count];
+}
+
+/**
+  *@Brief
+  *	Implement scheduler priority
+  *
+  */
+void round_robin(void)
+{
+	if (os_thread_count == 0)
+	{
+		return;
+	}
+
+	for(int i = 0; i < os_thread_count; i++)
+	{
+		if (i == (os_thread_count - 1)){
+			threads[i].nextPt = &threads[0];
+		} else {
+			threads[i].nextPt = &threads[i + 1];
+		}
+	}
+
+	// Set current stack to the first thread
+	p_current_thread = &threads[0];
 }
 
 /**
@@ -276,6 +300,8 @@ __attribute__((naked))  void SysTick_Handler(void)
   */
 void os_schedular_launch(void)
 {
+	// Apply round robin schedule
+	round_robin();
 	// load address of currentPt into R0
 	__asm("LDR R0,=p_current_thread");
 	// Load r2 from address r2 with r0 ie r2 = currentPt

@@ -14,6 +14,9 @@
 typedef uint32_t TaskProfiler;
 
 TaskProfiler Task0_Profiler, Task1_Profiler, Task2_Profiler;
+thread_handle_t* task0_handle;
+thread_handle_t* task1_handle;
+thread_handle_t* task2_handle;
 
 #define QUANTA 		10
 
@@ -49,14 +52,17 @@ void task2(void)
 
 int main(void)
 {
-	// init uart
+	// Initialise uart
 	uart_init();
-	// Init kernel
+
+	// Initialise kernel
 	Os_Kernel_Init();
-	// Add threads
-	Os_Kernel_Add_Thread(&task0);
-	Os_Kernel_Add_Thread(&task1);
-	Os_Kernel_Add_Thread(&task2);
+
+	// Create three tasks
+	task0_handle = Os_Kernel_Create_Thread("Task 0", 0, &task0);
+	task1_handle = Os_Kernel_Create_Thread("Task 1", 0, &task1);
+	task2_handle = Os_Kernel_Create_Thread("Task 2", 0, &task2);
+
 	// Set time quanta to 10ms
 	Os_Kernel_Launch(QUANTA);
 
