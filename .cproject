@@ -41,11 +41,11 @@
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.2126743011" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../Inc"/>
-									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/uart_driver/chip_headers/Device/ST/STM32F3xx/Include"/>
-									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/uart_driver/chip_headers/Include"/>
 									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/utils"/>
 									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/os"/>
 									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/drivers"/>
+									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/chip_headers/Device/ST/STM32F3xx/Include"/>
+									<listOptionValue builtIn="false" value="/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/chip_headers/Include"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.225228722" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -74,7 +74,6 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Inc"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -148,7 +147,6 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Inc"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
