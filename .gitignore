@@ -64,6 +64,15 @@ dkms.conf
 *.launch
 *.project
 *.cproject
-*/Startup
+/Startup
 .project
 /.settings
+*.ld
+/ref
+/info
+/objects
+/.metadata
+config
+HEAD
+description
+
