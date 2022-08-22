@@ -65,3 +65,5 @@ dkms.conf
 *.project
 *.cproject
 */Startup
+.project
+/.settings
