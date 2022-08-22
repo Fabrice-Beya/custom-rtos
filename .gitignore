@@ -43,6 +43,14 @@
 *.idb
 *.pdb
 
+.settings
+.project
+.classpath
+target/
+test-output/
+node_modules/**
+.orig
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
