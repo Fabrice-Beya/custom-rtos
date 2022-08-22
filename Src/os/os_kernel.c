@@ -177,9 +177,6 @@ thread_handle_t* Os_Kernel_Create_Thread(char *name, int priority, void(*thread)
 	threads[os_thread_count].state = READY;
 	threads[os_thread_count].priority = priority;
 
-	// Set current stack to the first thread
-//	p_current_thread = &threads[0];
-
 	// Increase thread counter.
 	os_thread_count++;
 
