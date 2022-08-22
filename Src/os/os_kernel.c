@@ -29,12 +29,8 @@ thread_handle_t threads[NUM_OF_THREADS];
 thread_handle_t *p_current_thread;
 
 /**
+ * Initialise the kernel
   *@brief
-  *
-  *
-  *@param a parameter a
-  *@param b parameter b
-  *@return  return sum
   *
   */
 void Os_Kernel_Init(void)
