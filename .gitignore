@@ -4,3 +4,7 @@
 [Rr]elease
 [Dd]ebug
 .launch
+/Debug
+Debug/makefile
+Debug/sources.mk
+*.mk

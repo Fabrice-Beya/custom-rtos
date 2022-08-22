@@ -19,7 +19,7 @@ C_DEPS += \
 
 # Each subdirectory must supply rules for building sources it contributes
 Src/drivers/%.o Src/drivers/%.su: ../Src/drivers/%.c Src/drivers/subdir.mk
-	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DSTM32F303xE -c -I../Inc -I/Users/fabricebeya/Documents/Projects/rtos/uart/uart_driver/chip_headers/Device/ST/STM32F3xx/Include -I/Users/fabricebeya/Documents/Projects/rtos/uart/uart_driver/chip_headers/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
+	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DSTM32F303xE -c -I../Inc -I/Users/fabricebeya/Documents/Projects/rtos/uart/uart_driver/chip_headers/Device/ST/STM32F3xx/Include -I/Users/fabricebeya/Documents/Projects/rtos/uart/uart_driver/chip_headers/Include -I/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/utils -I/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/os -I/Users/fabricebeya/Documents/Projects/rtos/uart/scheduler/Inc/drivers -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
 
 clean: clean-Src-2f-drivers
 

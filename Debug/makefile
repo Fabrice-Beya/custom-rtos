@@ -11,8 +11,9 @@ RM := rm -rf
 -include sources.mk
 -include Startup/subdir.mk
 -include Src/utils/subdir.mk
+-include Src/os/subdir.mk
 -include Src/drivers/subdir.mk
--include Src/subdir.mk
+-include Src/app/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)

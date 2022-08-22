@@ -21,8 +21,9 @@ C_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+Src/app \
 Src/drivers \
-Src \
+Src/os \
 Src/utils \
 Startup \
 
