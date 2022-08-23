@@ -71,7 +71,7 @@ typedef struct
 typedef struct
 {
 	GPIO_TypeDef *pGPIO_Port;
-	GPIO_PinConfig_t *GPIO_PinConfig;
+	GPIO_PinConfig_t GPIO_PinConfig;
 }GPIO_PinHandle_t;
 
 void GPIO_PortEnable(GPIO_TypeDef *pGPIO_Port);

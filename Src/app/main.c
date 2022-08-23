@@ -12,7 +12,7 @@
 
 void delay(void)
 {
-	for(uint32_t i = 0 ; i < 500000 ; i ++);
+	for(uint32_t i = 0 ; i < 50000 ; i ++);
 }
 
 int main(void)
@@ -21,8 +21,9 @@ int main(void)
 
 	while(1)
 	{
-		LED_On();
+		LED_Toggle();
 		delay();
-		LED_Off();
+		LED_Toggle();
+		delay();
 	}
 }

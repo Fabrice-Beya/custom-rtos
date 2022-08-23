@@ -43,29 +43,29 @@ void GPIO_PortEnable(GPIO_TypeDef *pGPIO_Port)
 
 void GPIO_ConfigMode(GPIO_PinHandle_t *pGPIO_PinHandle)
 {
-	if(pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinMode == GPIO_MODE_IN)
+	if(pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IN)
 	{
 		/* Mode = 00 */
-		pGPIO_PinHandle->pGPIO_Port->MODER &= ~(1U << (2 * pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber + 1));
-		pGPIO_PinHandle->pGPIO_Port->MODER &= ~(1U << (2 * pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber));
+		pGPIO_PinHandle->pGPIO_Port->MODER &= ~(1U << (2 * pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber + 1));
+		pGPIO_PinHandle->pGPIO_Port->MODER &= ~(1U << (2 * pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber));
 	}
-	else if(pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinMode == GPIO_MODE_OUT)
+	else if(pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_OUT)
 	{
 		/* Mode = 01 */
-		pGPIO_PinHandle->pGPIO_Port->MODER &= ~(1U << (2 * pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber + 1));
-		pGPIO_PinHandle->pGPIO_Port->MODER |= (1U <<  (2 * pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber));
+		pGPIO_PinHandle->pGPIO_Port->MODER &= ~(1U << (2 * pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber + 1));
+		pGPIO_PinHandle->pGPIO_Port->MODER |= (1U <<  (2 * pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber));
 	}
-	else if(pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinMode == GPIO_MODE_ALTFN)
+	else if(pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_ALTFN)
 	{
 		/* Mode = 10 */
-		pGPIO_PinHandle->pGPIO_Port->MODER |= (1U << (2 * pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber + 1));
-		pGPIO_PinHandle->pGPIO_Port->MODER &= ~(1U <<(2 * pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber));
+		pGPIO_PinHandle->pGPIO_Port->MODER |= (1U << (2 * pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber + 1));
+		pGPIO_PinHandle->pGPIO_Port->MODER &= ~(1U <<(2 * pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber));
 	}
-	else if(pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinMode == GPIO_MODE_ANALOG)
+	else if(pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_ANALOG)
 	{
 		/* Mode = 11 */
-		pGPIO_PinHandle->pGPIO_Port->MODER |= (1U << (2 * pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber + 1));
-		pGPIO_PinHandle->pGPIO_Port->MODER |= (1U << (2 * pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber));
+		pGPIO_PinHandle->pGPIO_Port->MODER |= (1U << (2 * pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber + 1));
+		pGPIO_PinHandle->pGPIO_Port->MODER |= (1U << (2 * pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber));
 	}
 }
 
@@ -75,10 +75,10 @@ void GPIO_ConfigAlt_Func(GPIO_PinHandle_t *pGPIO_PinHandle)
 	// TODO
 	uint8_t temp1, temp2;
 
-	temp1 = pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber / 8;
-	temp2 = pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber  % 8;
+	temp1 = pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber / 8;
+	temp2 = pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber  % 8;
 	pGPIO_PinHandle->pGPIO_Port->AFR[temp1] &= ~(0xF << ( 4 * temp2 ) ); //clearing
-	pGPIO_PinHandle->pGPIO_Port->AFR[temp1] |= (pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinAltFunMode << ( 4 * temp2 ) );
+	pGPIO_PinHandle->pGPIO_Port->AFR[temp1] |= (pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinAltFunMode << ( 4 * temp2 ) );
 
 }
 
@@ -91,7 +91,7 @@ void GPIO_PinInit(GPIO_PinHandle_t *pGPIO_PinHandle)
 	GPIO_ConfigMode(pGPIO_PinHandle);
 
 	/*  Configure the pin alternative function if applicable */
-	if(pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinMode == GPIO_MODE_ALTFN)
+	if(pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_ALTFN)
 	{
 		GPIO_ConfigAlt_Func(pGPIO_PinHandle);
 	}
@@ -100,7 +100,13 @@ void GPIO_PinInit(GPIO_PinHandle_t *pGPIO_PinHandle)
 uint8_t GPIO_ReadPin(GPIO_PinHandle_t *pGPIO_PinHandle)
 {
 	uint8_t val;
-	val = pGPIO_PinHandle->pGPIO_Port->IDR && (1U << pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber);
+	if(pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_IN)
+	{
+		val = (uint8_t)((pGPIO_PinHandle->pGPIO_Port->IDR >> pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber) && 0x00000001);
+	} else {
+		val = (uint8_t)((pGPIO_PinHandle->pGPIO_Port->ODR >> pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber) && 0x00000001);
+	}
+
 	return val;
 }
 
@@ -108,9 +114,9 @@ void GPIO_WritePin(GPIO_PinHandle_t *pGPIO_PinHandle, uint8_t val)
 {
 	if(val == GPIO_PIN_HIGH)
 	{
-		pGPIO_PinHandle->pGPIO_Port->ODR |= (1U << (pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber));
+		pGPIO_PinHandle->pGPIO_Port->ODR |= (1U << (pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber));
 	} else {
-		pGPIO_PinHandle->pGPIO_Port->ODR &= ~(1U << (pGPIO_PinHandle->GPIO_PinConfig->GPIO_PinNumber));
+		pGPIO_PinHandle->pGPIO_Port->ODR &= ~(1U << (pGPIO_PinHandle->GPIO_PinConfig.GPIO_PinNumber));
 	}
 }
 

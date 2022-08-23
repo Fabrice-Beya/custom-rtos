@@ -9,10 +9,11 @@
 #define LED_H_
 
 #include "utils.h"
-//#include "gpio.h"
+#include "gpio.h"
 
 void LED_Init();
 void LED_On();
-void LED_OFF();
+void LED_Off();
+void LED_Toggle();
 
 #endif /* LED_H_ */
